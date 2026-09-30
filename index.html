@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Iron Beast">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+
+    <title>الوحش الحديدي برو</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --c-main: #e60000;
+            --c-light: #ff3333;
+            --c-glow: rgba(230, 0, 0, 0.5);
+            --c-glow-strong: rgba(230, 0, 0, 0.8);
+        }
+
+        html, body {
+            overscroll-behavior-y: none;
+            overscroll-behavior-x: none;
+        }
+
+        body {
+            background-color: #000;
+            background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.98)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #f4f4f5; 
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.5s ease;
+        }
+        
+        body.focus-mode { background-image: none !important; background-color: #000 !important; }
+        body.focus-mode header, body.focus-mode main > section:not(#timerSection), body.focus-mode > div:first-of-type, body.focus-mode .top-nav {
+            opacity: 0.05; pointer-events: none; filter: blur(5px); transition: all 0.5s ease;
+        }
+
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+        }
+        
+        .neon-text { text-shadow: 0 0 15px var(--c-glow-strong) !important; color: var(--c-main) !important; }
+        .dynamic-bg { background-color: var(--c-main) !important; }
+        .dynamic-text { color: var(--c-main) !important; }
+        .dynamic-border { border-color: var(--c-main) !important; }
+        .dynamic-shadow { box-shadow: 0 0 20px var(--c-glow) !important; }
+        
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
+        @keyframes pulse-dynamic {
+            0%, 100% { box-shadow: 0 0 0 0 var(--c-glow); }
+            50% { box-shadow: 0 0 0 15px rgba(0,0,0,0); }
+        }
+        .timer-done { animation: pulse-dynamic 1s infinite !important; border-color: var(--c-main) !important; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--c-main); border-radius: 10px; }
+        .modal-overlay { backdrop-filter: blur(15px); transition: opacity 0.3s ease; }
+        .pop-animation { transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        #instaCard { background: linear-gradient(135deg, #111, #000); border: 1px solid var(--c-main); }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 pb-24">
+
+    <div class="max-w-md mx-auto flex justify-between items-center mb-4 top-nav">
+        <button onclick="openHelp()" class="w-8 h-8 rounded-full border border-gray-600 text-gray-400 text-lg font-black flex items-center justify-center hover:text-white transition shadow-md bg-gray-900/50">?</button>
+        <div class="flex gap-2 bg-black/60 p-1.5 rounded-full border border-white/5 shadow-inner">
+            <button id="theme-red" onclick="setAppTheme('red')" class="theme-btn w-5 h-5 rounded-full bg-[#e60000] border-2 border-transparent transition shadow-[0_0_10px_rgba(230,0,0,0.5)]"></button>
+            <button id="theme-gold" onclick="setAppTheme('gold')" class="theme-btn w-5 h-5 rounded-full bg-[#FFD700] border-2 border-transparent transition shadow-[0_0_10px_rgba(255,215,0,0.5)]"></button>
+            <button id="theme-green" onclick="setAppTheme('green')" class="theme-btn w-5 h-5 rounded-full bg-[#00e676] border-2 border-transparent transition shadow-[0_0_10px_rgba(0,230,118,0.5)]"></button>
+            <button id="theme-blue" onclick="setAppTheme('blue')" class="theme-btn w-5 h-5 rounded-full bg-[#00bfff] border-2 border-transparent transition shadow-[0_0_10px_rgba(0,191,255,0.5)]"></button>
+            <button id="theme-purple" onclick="setAppTheme('purple')" class="theme-btn w-5 h-5 rounded-full bg-[#b026ff] border-2 border-transparent transition shadow-[0_0_10px_rgba(176,38,255,0.5)]"></button>
+        </div>
+    </div>
+
+    <header class="max-w-md mx-auto flex justify-between items-center mb-6 transition-all">
+        <div class="flex items-center gap-3">
+            <div class="w-14 h-14 bg-[#050505] rounded-xl flex items-center justify-center dynamic-shadow dynamic-border border-opacity-40 border relative overflow-hidden">
+                <svg viewBox="0 0 512 512" class="w-full h-full transform scale-95">
+                    <rect width="512" height="512" fill="#050505"/>
+                    <circle cx="256" cy="256" r="180" fill="var(--c-glow)" filter="blur(20px)"/>
+                    <circle cx="256" cy="256" r="210" fill="none" stroke="var(--c-main)" stroke-width="24"/>
+                    <circle cx="256" cy="256" r="140" fill="none" stroke="var(--c-main)" stroke-width="48"/>
+                    <circle cx="256" cy="256" r="40" fill="#050505" stroke="var(--c-main)" stroke-width="16"/>
+                    <path d="M 256 116 L 256 46 M 134 326 L 74 386 M 378 326 L 438 386" stroke="#050505" stroke-width="32" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="flex flex-col items-start" dir="ltr">
+                <h1 class="text-3xl font-black tracking-tighter uppercase leading-none drop-shadow-md flex">
+                    <span class="dynamic-text">IRON</span><span class="text-white">BEAST</span>
+                </h1>
+                <p class="text-[9px] dynamic-text font-black tracking-[0.2em] uppercase mt-1 opacity-90 text-left w-full">ELITE EDITION</p>
+            </div>
+        </div>
+        
+        <div class="text-left bg-black/60 px-4 py-2 rounded-xl border border-white/5 shadow-inner">
+            <p class="text-[10px] text-gray-400 mb-0.5">حجم اليوم (كجم)</p>
+            <div id="totalVolume" class="text-2xl font-black text-white neon-text transition-all duration-300">0</div>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto space-y-4">
+        
+        <div class="bg-gradient-to-r from-[#111] to-transparent border-r-4 dynamic-border p-4 rounded-l-xl shadow-lg relative overflow-hidden group">
+            <div class="absolute -left-2 -top-2 text-5xl opacity-5">🦍</div>
+            <p id="motivationalQuote" class="text-[13px] font-bold text-gray-300 leading-relaxed pr-2 border-r border-white/10"></p>
+        </div>
+
+        <section class="glass-panel p-5 rounded-3xl relative overflow-hidden mt-2">
+            <div class="absolute top-0 right-0 w-full h-1 dynamic-bg opacity-80"></div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-bold text-gray-300 mb-2">التمرين المستهدف</label>
+                <div class="relative">
+                    <select id="exerciseSelect" onchange="toggleCustomExercise()" class="w-full bg-black/80 border border-gray-700 text-white text-lg font-bold py-3 pr-4 pl-10 rounded-xl focus:outline-none dynamic-border appearance-none transition-colors">
+                        <option value="" disabled selected>اختر التمرين...</option>
+                        <optgroup label="عضلات الصدر (Chest)">
+                            <option value="بنش بريس مستوي (Flat Bench)">بنش بريس مستوي (Flat Bench)</option>
+                            <option value="تجميع دمبلز عالي (Incline Dumbbell)">تجميع دمبلز عالي (Incline Dumbbell)</option>
+                            <option value="تفتيح كابل (Cable Crossovers)">تفتيح كابل (Cable Crossovers)</option>
+                            <option value="غطس متوازي (Dips)">غطس متوازي (Dips)</option>
+                        </optgroup>
+                        <optgroup label="عضلات الظهر (Back)">
+                            <option value="ديدليفت (Deadlift)">ديدليفت (Deadlift)</option>
+                            <option value="سحب ظهر أرضي (Cable Row)">سحب ظهر أرضي (Cable Row)</option>
+                            <option value="سحب عالي (Lat Pulldown)">سحب عالي (Lat Pulldown)</option>
+                            <option value="بار حر (Barbell Row)">بار حر (Barbell Row)</option>
+                        </optgroup>
+                        <optgroup label="عضلات الأكتاف (Shoulders)">
+                            <option value="ضغط بار أمامي (Overhead Press)">ضغط بار أمامي (Overhead Press)</option>
+                            <option value="ضغط دمبلز (Dumbbell Press)">ضغط دمبلز (Dumbbell Press)</option>
+                            <option value="رفرفة جانبي (Lateral Raises)">رفرفة جانبي (Lateral Raises)</option>
+                            <option value="رفرفة خلفي (Rear Delt Fly)">رفرفة خلفي (Rear Delt Fly)</option>
+                        </optgroup>
+                        <optgroup label="عضلات الذراعين (Arms)">
+                            <option value="بايسبس بار (Barbell Curl)">بايسبس بار (Barbell Curl)</option>
+                            <option value="بايسبس تبادل (Dumbbell Curl)">بايسبس تبادل (Dumbbell Curl)</option>
+                            <option value="ترايسبس حبل (Tricep Rope)">ترايسبس حبل (Tricep Rope)</option>
+                            <option value="ترايسبس فرنسي (Skullcrusher)">ترايسبس فرنسي (Skullcrusher)</option>
+                        </optgroup>
+                        <optgroup label="عضلات الأرجل (Legs)">
+                            <option value="سكوات (Squat)">سكوات (Squat)</option>
+                            <option value="مكبس أرجل (Leg Press)">مكبس أرجل (Leg Press)</option>
+                            <option value="رفرفة أمامي (Leg Extensions)">رفرفة أمامي (Leg Extensions)</option>
+                            <option value="خلفيات أرجل (Leg Curls)">خلفيات أرجل (Leg Curls)</option>
+                            <option value="سمانة (Calf Raises)">سمانة (Calf Raises)</option>
+                        </optgroup>
+                        <optgroup label="عضلات البطن (Abs)">
+                            <option value="كرانشز (Crunches)">كرانشز (Crunches)</option>
+                            <option value="رفع أرجل (Leg Raises)">رفع أرجل (Leg Raises)</option>
+                        </optgroup>
+                        <optgroup label="أخرى">
+                            <option value="custom" class="dynamic-text font-black">✍️ كتابة تمرين مخصص...</option>
+                        </optgroup>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center px-4 text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+                <input type="text" id="customExerciseInput" placeholder="اكتب اسم التمرين هنا..." class="mt-3 w-full bg-black/80 border dynamic-border text-white text-lg p-3 rounded-xl focus:outline-none hidden transition-all">
+            </div>
+
+            <div id="warmupDiv" class="hidden mb-4 bg-brandDark border border-white/10 p-3 rounded-xl flex items-start gap-3 transition-all dynamic-shadow">
+                <div class="text-xl">🔥</div>
+                <div>
+                    <p class="text-[10px] dynamic-text font-black mb-1">خطة التسخين للوزن الحالي</p>
+                    <p id="warmupText" class="text-[11px] text-gray-300 font-bold leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div id="inputsGrid" class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-black/60 p-3 rounded-xl border border-gray-700/50 flex flex-col items-center relative">
+                    <button onclick="generateWarmup()" class="absolute top-2 left-2 text-[10px] bg-gray-800 text-gray-400 hover:text-white px-2 py-0.5 rounded transition">🔥 تسخين</button>
+                    <label class="text-[11px] font-bold text-gray-400 mb-2 mt-3">الوزن (كجم)</label>
+                    <div class="flex items-center justify-between w-full bg-[#0a0a0a] rounded-lg p-1 border border-gray-800">
+                        <button onclick="adjustValue('weight', -2.5)" class="w-8 h-8 rounded bg-gray-800 text-white font-bold dynamic-bg">-</button>
+                        <input type="number" id="weightInput" placeholder="0" class="w-12 bg-transparent text-center text-xl font-black text-white focus:outline-none">
+                        <button onclick="adjustValue('weight', 2.5)" class="w-8 h-8 rounded bg-gray-800 text-white font-bold dynamic-bg">+</button>
+                    </div>
+                </div>
+
+                <div class="bg-black/60 p-3 rounded-xl border border-gray-700/50 flex flex-col items-center">
+                    <label class="text-[11px] font-bold text-gray-400 mb-2">العدادات (Reps)</label>
+                    <div class="flex items-center justify-between w-full bg-[#0a0a0a] rounded-lg p-1 border border-gray-800">
+                        <button onclick="adjustValue('reps', -1)" class="w-8 h-8 rounded bg-gray-800 text-white font-bold dynamic-bg">-</button>
+                        <input type="number" id="repsInput" placeholder="0" class="w-12 bg-transparent text-center text-xl font-black text-white focus:outline-none">
+                        <button onclick="adjustValue('reps', 1)" class="w-8 h-8 rounded bg-gray-800 text-white font-bold dynamic-bg">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-2 mb-4">
+                <button onclick="setSetType('normal')" id="btnNormal" class="px-3 py-1 dynamic-bg text-black text-[10px] font-black rounded-lg transition shadow-md">عادية</button>
+                <button onclick="setSetType('drop')" id="btnDrop" class="px-3 py-1 bg-gray-800 text-gray-400 text-[10px] font-bold rounded-lg transition border border-transparent">دروب سيت 📉</button>
+                <button onclick="setSetType('super')" id="btnSuper" class="px-3 py-1 bg-gray-800 text-gray-400 text-[10px] font-bold rounded-lg transition border border-transparent">سوبر سيت 🔗</button>
+            </div>
+
+            <button onclick="logSet()" id="logBtn" class="w-full py-4 bg-white text-black font-black text-xl rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:bg-gray-200 active:scale-[0.98] transition-all flex justify-center items-center gap-2">
+                <span>تسجيل المجموعة</span>
+                <span class="text-xl dynamic-text">⚡</span>
+            </button>
+        </section>
+
+        <section id="timerSection" class="glass-panel p-5 rounded-3xl border border-gray-700/50 transition-all duration-500 z-50 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-gray-300 flex items-center gap-2" id="timerTitle">
+                    <span class="text-lg">⏱️</span> الاستشفاء
+                </h2>
+                <div id="timerDisplay" class="text-2xl font-black font-mono text-white tracking-widest drop-shadow-md transition-all duration-500">00:00</div>
+            </div>
+            <p id="focusQuote" class="hidden text-center dynamic-text text-sm font-bold mb-4 opacity-0 transition-opacity duration-1000">الراحة للبناء.. التركيز للقوة 🧘‍♂️</p>
+            <div class="grid grid-cols-4 gap-2" id="timerButtons">
+                <button onclick="startRest(30)" class="py-2 bg-black/80 border border-gray-700 rounded-lg text-[11px] font-bold text-gray-400 hover:border-white transition dynamic-active">30 ث</button>
+                <button onclick="startRest(60)" class="py-2 bg-black/80 border border-gray-700 rounded-lg text-[11px] font-bold text-gray-400 hover:border-white transition dynamic-active">60 ث</button>
+                <button onclick="startRest(90)" class="py-2 bg-black/80 border border-gray-700 rounded-lg text-[11px] font-bold text-gray-400 hover:border-white transition dynamic-active">90 ث</button>
+                <button onclick="startRest(120)" class="py-2 bg-black/80 border border-gray-700 rounded-lg text-[11px] font-bold text-gray-400 hover:border-white transition dynamic-active">120 ث</button>
+            </div>
+            <button onclick="stopTimer()" id="stopTimerBtn" class="w-full mt-2 py-2 border border-white/20 rounded-lg text-xs font-bold hidden text-white transition">إلغاء التركيز</button>
+        </section>
+
+        <section class="glass-panel p-5 rounded-3xl mb-8 border border-gray-700/50 relative">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700/50 pb-3">
+                <h2 class="font-bold text-white text-sm flex items-center gap-2"><span class="text-lg">📋</span> سجل اليوم</h2>
+                <div class="flex gap-2">
+                    <button onclick="openArchive()" class="text-[10px] text-gray-300 bg-gray-800 px-3 py-1.5 rounded font-bold hover:bg-gray-700 transition">الأرشيف 📁</button>
+                    <button onclick="promptFinishWorkout()" class="text-[10px] text-black dynamic-bg px-3 py-1.5 rounded font-black hover:opacity-80 transition shadow-md">إنهاء التمرينة ✅</button>
+                </div>
+            </div>
+            <div id="logContainer" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="helpModal" class="fixed inset-0 z-[70] bg-black/95 hidden flex-col items-center justify-end md:justify-center">
+        <div class="bg-[#0a0a0a] w-full max-w-md h-[85vh] md:h-auto md:max-h-[85vh] rounded-t-3xl md:rounded-3xl border border-gray-800 shadow-2xl flex flex-col pop-animation scale-95 opacity-0" id="helpContent">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-black/80 rounded-t-3xl">
+                <h2 class="text-xl font-black text-white flex items-center gap-2"><span class="text-2xl">📖</span> دليل الوحش</h2>
+                <button onclick="closeHelp()" class="w-8 h-8 bg-gray-800 rounded-full text-gray-400 hover:text-white transition flex items-center justify-center font-bold">X</button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1 space-y-6 text-sm text-gray-300">
+                <div>
+                    <h3 class="text-white font-black text-lg mb-2 dynamic-text border-b border-gray-800 pb-1">1. الأساسيات 🟢</h3>
+                    <ul class="list-disc pr-5 space-y-2 mt-2 leading-relaxed">
+                        <li>اختر التمرين، حدد <span class="font-bold text-white">الوزن والعدادات</span> ودوس "تسجيل".</li>
+                        <li>اختار وقت راحة من العداد. الشاشة هتضلم عشان تدخلك في <span class="font-bold text-white">التركيز السينمائي</span>.</li>
+                        <li>دوس <span class="font-bold text-white">"إنهاء التمرينة ✅"</span> عشان تتحفظ.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-black text-lg mb-2 dynamic-text border-b border-gray-800 pb-1">2. أسرار الـ VIP ⚡</h3>
+                    <ul class="list-disc pr-5 space-y-3 mt-2 leading-relaxed">
+                        <li><span class="font-black text-black bg-white px-1 rounded">🔥 حاسبة التسخين:</span> اكتب الوزن التقيل، ودوس "تسخين" أعلى المربع.</li>
+                        <li><span class="font-black text-black bg-white px-1 rounded">📉 الدروب سيت:</span> اختارها قبل ما تسجل الأوزان الخفيفة.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-black text-lg mb-2 dynamic-text border-b border-gray-800 pb-1">3. النسخ الاحتياطي 🔒</h3>
+                    <div class="flex gap-2">
+                        <button onclick="exportData()" class="flex-1 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold transition">تصدير 📥</button>
+                        <label class="flex-1 bg-gray-800 text-white py-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
+                            استيراد 📤
+                            <input type="file" class="hidden" accept=".json" onchange="importData(event)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة الأرشيف والتفاصيل -->
+    <div id="archiveModal" class="fixed inset-0 z-40 bg-black/95 modal-overlay hidden flex-col items-center justify-end md:justify-center">
+        <div class="bg-[#0a0a0a] w-full max-w-md h-[85vh] md:h-auto md:max-h-[85vh] rounded-t-3xl md:rounded-3xl border border-gray-800 shadow-2xl flex flex-col pop-animation scale-95 opacity-0" id="archiveContent">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-black/80 rounded-t-3xl">
+                <div class="flex items-center gap-3">
+                    <button id="backBtn" onclick="backToArchiveList()" class="hidden w-8 h-8 bg-gray-800 rounded-full text-white transition flex items-center justify-center font-bold">➔</button>
+                    <h2 id="archiveTitle" class="text-xl font-black text-white flex items-center gap-2">📁 الأرشيف</h2>
+                </div>
+                <button onclick="closeArchive()" class="w-8 h-8 bg-gray-800 rounded-full text-gray-400 transition flex items-center justify-center font-bold hover:bg-red-500 hover:text-white">X</button>
+            </div>
+            <div id="archiveListContainer" class="p-5 overflow-y-auto flex-1 space-y-4 block"></div>
+            <div id="archiveDetailsContainer" class="p-5 overflow-y-auto flex-1 space-y-3 hidden flex-col relative">
+                <button onclick="showInstaCard()" id="btnInsta" class="w-full mb-3 py-3 bg-gradient-to-r from-gray-800 to-[#111] border border-white/20 text-white text-xs font-bold rounded-xl dynamic-shadow flex justify-center items-center gap-2 transition active:scale-95">
+                    <span>تصدير صورة للستوري</span> 📸
+                </button>
+                <div id="detailsList" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="instaModal" class="fixed inset-0 z-50 bg-black/95 hidden flex-col items-center justify-center p-4">
+        <div id="instaCard" class="w-full max-w-[300px] rounded-2xl p-6 relative overflow-hidden flex flex-col items-center">
+            <div class="absolute -top-10 -right-10 w-32 h-32 dynamic-bg opacity-10 rounded-full blur-2xl"></div>
+            <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center border-2 dynamic-border mb-4 z-10 dynamic-shadow"><span class="text-2xl dynamic-text">🔥</span></div>
+            <h2 class="text-white font-black text-2xl mb-1 z-10 tracking-tighter" dir="ltr">IRON BEAST</h2>
+            <p id="instaDate" class="text-[10px] text-gray-400 mb-6 z-10"></p>
+            <div class="bg-black/50 border border-white/10 rounded-xl p-4 w-full text-center mb-6 z-10">
+                <p class="text-xs text-gray-400 mb-1">إجمالي الوزن المرفوع</p>
+                <p id="instaVolume" class="text-3xl font-black dynamic-text">0 <span class="text-sm text-gray-500">كجم</span></p>
+            </div>
+            <p class="text-[9px] dynamic-text z-10 tracking-[0.2em] font-bold uppercase">No Excuses. Just Results.</p>
+        </div>
+        <button onclick="document.getElementById('instaModal').classList.replace('flex', 'hidden')" class="mt-6 px-8 py-3 bg-gray-800 text-white rounded-full font-bold">إغلاق</button>
+    </div>
+
+    <div id="customDialog" class="fixed inset-0 z-[60] bg-black/90 modal-overlay hidden flex-col items-center justify-center p-4">
+        <div class="bg-[#111] border border-gray-700 rounded-3xl p-6 w-full max-w-xs text-center shadow-2xl pop-animation scale-95 opacity-0" id="customDialogContent">
+            <div id="dialogIcon" class="text-5xl mb-4 dynamic-text">⚠️</div>
+            <h3 id="dialogTitle" class="text-white font-black text-xl mb-2">تنبيه</h3>
+            <div id="dialogMessage" class="text-gray-300 text-sm mb-6 leading-relaxed"></div>
+            <div id="dialogButtons" class="flex gap-3 justify-center"></div>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => {
+                    console.warn('ServiceWorker register ignored locally/unsupported protocol', err);
+                });
+            });
+        }
+
+        const themes = {
+            'red': { main: '#e60000', light: '#ff3333', glow: 'rgba(230,0,0,0.5)', strong: 'rgba(230,0,0,0.8)' },
+            'gold': { main: '#FFD700', light: '#FFF07C', glow: 'rgba(255,215,0,0.5)', strong: 'rgba(255,215,0,0.8)' },
+            'green': { main: '#00e676', light: '#69f0ae', glow: 'rgba(0,230,118,0.5)', strong: 'rgba(0,230,118,0.8)' },
+            'blue': { main: '#00bfff', light: '#80dfff', glow: 'rgba(0,191,255,0.5)', strong: 'rgba(0,191,255,0.8)' },
+            'purple': { main: '#b026ff', light: '#d884ff', glow: 'rgba(176,38,255,0.5)', strong: 'rgba(176,38,255,0.8)' }
+        };
+
+        let totalVolume = 0, setsLog = [], timerInterval, workoutArchive = [];
+        let currentSetType = 'normal', wakeLock = null, currentDialogCallback = null;
+
+        function setAppTheme(colorName) {
+            const theme = themes[colorName];
+            if(!theme) return;
+            document.documentElement.style.setProperty('--c-main', theme.main);
+            document.documentElement.style.setProperty('--c-light', theme.light);
+            document.documentElement.style.setProperty('--c-glow', theme.glow);
+            document.documentElement.style.setProperty('--c-glow-strong', theme.strong);
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.replace('border-white', 'border-transparent'));
+            const selectedBtn = document.getElementById('theme-' + colorName);
+            if (selectedBtn) selectedBtn.classList.replace('border-transparent', 'border-white');
+            localStorage.setItem('ib_theme', colorName);
+            setSetType(currentSetType);
+        }
+
+        function loadTheme() {
+            const saved = localStorage.getItem('ib_theme') || 'red';
+            setAppTheme(saved);
+        }
+
+        function hapticTap(type = 'light') {
+            if (!navigator.vibrate) return;
+            try {
+                if (type === 'light') navigator.vibrate(100);
+                else if (type === 'heavy') navigator.vibrate([150, 50, 150]);
+                else if (type === 'success') navigator.vibrate([100, 50, 100, 50, 200]);
+            } catch(e) { }
+        }
+
+        async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {} }
+        function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); } }
+
+        function generateWarmup() {
+            hapticTap('heavy');
+            const w = parseFloat(document.getElementById('weightInput').value);
+            const div = document.getElementById('warmupDiv'), text = document.getElementById('warmupText');
+            if(!w || w < 20) { showDialog('تنبيه', 'الوزن قليل جداً.', 'alert'); div.classList.add('hidden'); return; }
+            const set1 = Math.round((w * 0.5) / 2.5) * 2.5, set2 = Math.round((w * 0.7) / 2.5) * 2.5;
+            text.innerHTML = `المجموعة 1: <span class="text-white font-black">${set1} كجم</span> × 10 عدات<br>المجموعة 2: <span class="text-white font-black">${set2} كجم</span> × 5 عدات`;
+            div.classList.remove('hidden');
+        }
+
+        function setSetType(type) {
+            hapticTap('light'); currentSetType = type;
+            const btnNormal = document.getElementById('btnNormal');
+            btnNormal.className = type === 'normal' ? `px-3 py-1 dynamic-bg text-black text-[10px] font-black rounded-lg transition shadow-md` : `px-3 py-1 bg-gray-800 text-gray-400 text-[10px] font-bold rounded-lg transition border border-transparent`;
+            document.getElementById('btnDrop').className = `px-3 py-1 text-[10px] font-bold rounded-lg transition ${type === 'drop' ? 'bg-orange-900/50 text-orange-400 border border-orange-500 shadow-md' : 'bg-gray-800 text-gray-400 border border-transparent'}`;
+            document.getElementById('btnSuper').className = `px-3 py-1 text-[10px] font-bold rounded-lg transition ${type === 'super' ? 'bg-blue-900/50 text-blue-400 border border-blue-500 shadow-md' : 'bg-gray-800 text-gray-400 border border-transparent'}`;
+        }
+
+        function showDialog(title, message, type, confirmCallback = null) {
+            hapticTap('heavy');
+            const dialog = document.getElementById('customDialog'), content = document.getElementById('customDialogContent');
+            document.getElementById('dialogTitle').innerText = title;
+            document.getElementById('dialogMessage').innerHTML = message;
+            const buttonsContainer = document.getElementById('dialogButtons'), icon = document.getElementById('dialogIcon');
+            currentDialogCallback = confirmCallback;
+            buttonsContainer.innerHTML = '';
+            if(type === 'alert') {
+                icon.innerText = '⚠️';
+                buttonsContainer.innerHTML = `<button onclick="hideDialog()" class="flex-1 bg-gray-800 text-white py-3 rounded-xl font-bold">فهمت</button>`;
+            } else if(type === 'success') {
+                icon.innerText = '🔥';
+                buttonsContainer.innerHTML = `<button onclick="hideDialog(); if(currentDialogCallback) currentDialogCallback();" class="flex-1 dynamic-bg text-black py-3 rounded-xl font-black">عاش!</button>`;
+            } else if(type === 'confirm') {
+                icon.innerText = '🤔';
+                buttonsContainer.innerHTML = `<button onclick="hideDialog()" class="flex-1 bg-transparent text-gray-400 py-3 rounded-xl font-bold">تراجع</button><button onclick="hideDialog(); if(currentDialogCallback) currentDialogCallback();" class="flex-1 dynamic-bg text-black py-3 rounded-xl font-bold shadow-lg">تأكيد</button>`;
+            }
+            dialog.classList.remove('hidden'); dialog.classList.add('flex');
+            setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
+        }
+
+        function hideDialog() {
+            const dialog = document.getElementById('customDialog'), content = document.getElementById('customDialogContent');
+            content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { dialog.classList.add('hidden'); dialog.classList.remove('flex'); }, 200);
+        }
+
+        function logSet() {
+            const select = document.getElementById('exerciseSelect');
+            let ex = select.value === 'custom' ? document.getElementById('customExerciseInput').value.trim() : select.value;
+            if (!ex) { showDialog('ناقص', 'اختر تمرين!', 'alert'); return; }
+            const w = parseFloat(document.getElementById('weightInput').value) || 0, r = parseInt(document.getElementById('repsInput').value) || 0;
+            if (w === 0 && r === 0) return;
+            hapticTap('heavy'); const v = w * r; totalVolume += v;
+            setsLog.unshift({ id: Date.now(), exercise: ex, weight: w, reps: r, volume: v, type: currentSetType, time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) });
+            updateVolumeUI(); renderLog(); saveData();
+            const btn = document.getElementById('logBtn'), old = btn.innerHTML;
+            btn.innerHTML = '<span>تم! ✓</span>'; btn.classList.add('dynamic-bg', 'text-black'); btn.classList.remove('bg-white');
+            setTimeout(() => { btn.innerHTML = old; btn.classList.remove('dynamic-bg', 'text-black'); btn.classList.add('bg-white', 'text-black'); }, 1000);
+            setSetType('normal');
+        }
+
+        function promptFinishWorkout() {
+            if(setsLog.length === 0) return;
+            const now = new Date();
+            const y = now.getFullYear(); const m = String(now.getMonth() + 1).padStart(2, '0'); const d = String(now.getDate()).padStart(2, '0');
+            const maxDate = `${y}-${m}-${d}`;
+            const msg = `تأكيد الإنهاء؟ <div class="mt-4 bg-black/40 p-3 rounded-xl border border-gray-700/50 text-right"><label class="block text-[10px] text-gray-400 mb-2">تاريخ قديم؟ (اختياري)</label><input type="date" id="customWorkoutDate" max="${maxDate}" class="w-full bg-[#111] text-white text-xs p-2 rounded-lg border border-gray-600 focus:outline-none focus:border-red-500 cursor-pointer"></div>`;
+            showDialog('إنهاء التمرينة', msg, 'confirm', executeFinishWorkout);
+        }
+
+        function executeFinishWorkout() {
+            let maxV = localStorage.getItem('ib_max_vol') || 0, isPR = totalVolume > maxV;
+            if(isPR) localStorage.setItem('ib_max_vol', totalVolume);
+            
+            let workoutDateObj = new Date();
+            const customDateEl = document.getElementById('customWorkoutDate');
+            if (customDateEl && customDateEl.value) { workoutDateObj = new Date(customDateEl.value); }
+            
+            workoutArchive.push({ 
+                id: Date.now(), 
+                date: workoutDateObj.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }), 
+                timestamp: workoutDateObj.getTime(), 
+                totalVolume: totalVolume, 
+                setsCount: setsLog.length, 
+                details: [...setsLog] 
+            });
+            workoutArchive.sort((a, b) => {
+                const timeA = a.timestamp || a.id; 
+                const timeB = b.timestamp || b.id;
+                return timeB - timeA;
+            });
+            
+            setsLog = []; totalVolume = 0; updateVolumeUI(); renderLog(); saveData();
+            document.getElementById('weightInput').value = ''; document.getElementById('repsInput').value = '';
+            showDialog(isPR ? 'رقم قياسي! 🔥' : 'عاش يا وحش!', isPR ? 'حطمت أرقامك!' : 'تم الحفظ.', 'success');
+        }
+
+        function openArchive() {
+            stopTimer(); document.getElementById('timerSection').classList.add('hidden');
+            backToArchiveList(); const modal = document.getElementById('archiveModal'), content = document.getElementById('archiveContent');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
+        }
+
+        function closeArchive() {
+            const modal = document.getElementById('archiveModal'), content = document.getElementById('archiveContent');
+            content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); document.getElementById('timerSection').classList.remove('hidden'); }, 200);
+        }
+
+        async function startRest(s) {
+            hapticTap('light'); clearInterval(timerInterval); let left = s;
+            const disp = document.getElementById('timerDisplay'), sec = document.getElementById('timerSection');
+            document.body.classList.add('focus-mode'); document.getElementById('timerButtons').classList.add('hidden');
+            sec.classList.remove('timer-done'); sec.classList.add('scale-110', 'dynamic-border');
+            document.getElementById('stopTimerBtn').classList.remove('hidden');
+            document.getElementById('focusQuote').classList.remove('hidden');
+            setTimeout(() => document.getElementById('focusQuote').classList.add('opacity-100'), 100);
+            await requestWakeLock();
+            const upd = () => { disp.innerText = `${Math.floor(left / 60).toString().padStart(2, '0')}:${(left % 60).toString().padStart(2, '0')}`; disp.style.fontSize = '3.5rem'; disp.style.color = 'var(--c-main)'; };
+            upd();
+            timerInterval = setInterval(() => {
+                left--; upd();
+                if (left <= 0) { clearInterval(timerInterval); disp.innerText = "GO! 🔥"; sec.classList.add('timer-done'); playGymAlarm(); hapticTap('success'); stopTimer(true); }
+            }, 1000);
+        }
+
+        function stopTimer(auto = false) {
+            if(!auto) { clearInterval(timerInterval); document.getElementById('timerDisplay').innerText = "00:00"; document.getElementById('timerDisplay').style.color = '#fff'; document.getElementById('timerSection').classList.remove('timer-done'); }
+            document.body.classList.remove('focus-mode'); document.getElementById('timerDisplay').style.fontSize = ''; 
+            document.getElementById('timerSection').classList.remove('scale-110', 'dynamic-border');
+            document.getElementById('timerButtons').classList.remove('hidden'); document.getElementById('stopTimerBtn').classList.add('hidden');
+            document.getElementById('focusQuote').classList.replace('opacity-100', 'opacity-0');
+            setTimeout(() => document.getElementById('focusQuote').classList.add('hidden'), 500); releaseWakeLock();
+        }
+
+        function updateVolumeUI() { document.getElementById('totalVolume').innerText = totalVolume.toLocaleString(); }
+        function toggleCustomExercise() { const s = document.getElementById('exerciseSelect'), i = document.getElementById('customExerciseInput'); if (s.value === 'custom') { i.classList.remove('hidden'); i.focus(); } else { i.classList.add('hidden'); } }
+        function adjustValue(id, a) { hapticTap('light'); const i = document.getElementById(id + 'Input'); let v = (parseFloat(i.value) || 0) + a; if (v < 0) v = 0; i.value = Number.isInteger(v) ? v : v.toFixed(1); document.getElementById('warmupDiv').classList.add('hidden'); }
+        
+        function renderLog() {
+            const c = document.getElementById('logContainer'); if (setsLog.length === 0) { c.innerHTML = '<div class="text-center text-gray-600 py-6 text-[11px] font-bold">السجل فارغ.</div>'; return; }
+            c.innerHTML = setsLog.map(s => `<div class="bg-black/80 border border-gray-800 p-3 rounded-xl flex justify-between items-center relative overflow-hidden"><div class="absolute right-0 top-0 w-1 h-full dynamic-bg opacity-50"></div><div class="pr-2"><h3 class="text-white font-bold text-xs mb-1.5">${s.exercise} ${s.type !== 'normal' ? `<span class="text-[8px] bg-gray-700 px-1 rounded">${s.type}</span>` : ''}</h3><div class="flex gap-3 text-[10px]"><span class="text-gray-400">الوزن: <span class="dynamic-text font-black">${s.weight}</span></span><span class="text-gray-400">العدادات: <span class="text-white font-black">${s.reps}</span></span></div></div><button onclick="executeDelete(${s.id})" class="text-[10px] text-gray-500 hover:text-red-500">✖ حذف</button></div>`).join('');
+        }
+        
+        function executeDelete(id) { hapticTap('light'); const s = setsLog.find(x => x.id === id); if(s) { totalVolume -= s.volume; if(totalVolume < 0) totalVolume = 0; setsLog = setsLog.filter(x => x.id !== id); updateVolumeUI(); renderLog(); saveData(); } }
+        
+        function backToArchiveList() { hapticTap('light'); document.getElementById('backBtn').classList.add('hidden'); document.getElementById('archiveTitle').innerHTML = '📁 الأرشيف'; document.getElementById('archiveListContainer').classList.replace('hidden', 'block'); document.getElementById('archiveDetailsContainer').classList.replace('flex', 'hidden'); renderArchiveList(); }
+        
+        // --- تحديث الأرشيف ليدعم حذف أيام كاملة ---
+        function renderArchiveList() { 
+            const c = document.getElementById('archiveListContainer'); 
+            if (workoutArchive.length === 0) { 
+                c.innerHTML = '<div class="text-center text-gray-500 py-10 font-bold">فارغ.</div>'; 
+            } else { 
+                c.innerHTML = workoutArchive.map(w => `
+                    <div onclick="viewWorkoutDetails(${w.id})" class="bg-[#111] border border-gray-800 p-3 rounded-xl flex justify-between items-center mb-2 hover:border-white transition cursor-pointer">
+                        <div>
+                            <h3 class="text-white font-bold text-xs">${w.date}</h3>
+                            <p class="text-[9px] text-gray-500">${w.setsCount} مجموعات</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="dynamic-text font-black text-sm">${w.totalVolume.toLocaleString()} كجم</span>
+                            <button onclick="event.stopPropagation(); deleteWorkoutFromArchive(${w.id})" class="w-6 h-6 bg-red-900/30 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition">✖</button>
+                        </div>
+                    </div>`).join(''); 
+            } 
+        }
+
+        // دالة جديدة لمسح يوم كامل من الأرشيف
+        function deleteWorkoutFromArchive(id) {
+            showDialog('تأكيد الحذف', 'متأكد إنك عايز تمسح التمرينة دي بالكامل من الأرشيف؟', 'confirm', () => {
+                hapticTap('light');
+                workoutArchive = workoutArchive.filter(w => w.id !== id);
+                saveData();
+                renderArchiveList();
+            });
+        }
+
+        // --- تحديث تفاصيل الأرشيف لتدعم حذف مجموعة معينة ---
+        function viewWorkoutDetails(id) {
+            hapticTap('light'); const w = workoutArchive.find(x => x.id === id); if(!w) return; currentViewedWorkout = w;
+            document.getElementById('backBtn').classList.remove('hidden'); document.getElementById('archiveTitle').innerHTML = `<span class="dynamic-text text-xs">${w.date}</span>`;
+            document.getElementById('archiveListContainer').classList.replace('block', 'hidden'); document.getElementById('archiveDetailsContainer').classList.replace('hidden', 'flex');
+            
+            document.getElementById('detailsList').innerHTML = w.details.map(s => {
+                let typeBadge = '';
+                if(s.type === 'drop') typeBadge = '<span class="text-[8px] text-orange-400 ml-1">Drop</span>';
+                if(s.type === 'super') typeBadge = '<span class="text-[8px] text-blue-400 ml-1">Super</span>';
+                return `
+                    <div class="bg-black/60 border border-gray-800 p-2 rounded-lg mb-2 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-white font-bold text-[11px] mb-1">${s.exercise} ${typeBadge}</h3>
+                            <span class="text-[10px] dynamic-text font-bold">${s.weight}كجم × <span class="text-white">${s.reps}عدات</span></span>
+                        </div>
+                        <div class="flex flex-col items-end gap-1">
+                            <button onclick="deleteArchivedSet(${w.id}, ${s.id})" class="text-[10px] text-gray-500 hover:text-red-500">✖ حذف</button>
+                            <span class="text-[8px] text-gray-600 bg-gray-900 px-2 py-1 rounded">${s.time}</span>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // دالة جديدة لمسح مجموعة محددة من جوه الأرشيف
+        function deleteArchivedSet(workoutId, setId) {
+            hapticTap('light');
+            let w = workoutArchive.find(x => x.id === workoutId);
+            if(!w) return;
+            let s = w.details.find(x => x.id === setId);
+            if(s) {
+                w.totalVolume = Math.max(0, w.totalVolume - s.volume); // تقليل إجمالي الوزن المرفوع
+                w.details = w.details.filter(x => x.id !== setId); // مسح المجموعة
+                w.setsCount = w.details.length;
+                
+                if(w.setsCount === 0) {
+                    // لو مسحت كل المجموعات، التمرينة كلها تتمسح ويرجعك للأرشيف من بره
+                    workoutArchive = workoutArchive.filter(x => x.id !== workoutId);
+                    saveData();
+                    backToArchiveList();
+                } else {
+                    // لو لسه في مجموعات، يعمل تحديث لنفس الشاشة
+                    saveData();
+                    viewWorkoutDetails(workoutId); 
+                }
+            }
+        }
+
+        function showInstaCard() { if(!currentViewedWorkout) return; document.getElementById('instaDate').innerText = currentViewedWorkout.date; document.getElementById('instaVolume').innerHTML = `${currentViewedWorkout.totalVolume.toLocaleString()} <span class="text-sm text-gray-500">كجم</span>`; document.getElementById('instaModal').classList.replace('hidden', 'flex'); }
+        function exportData() { hapticTap('light'); const d = { session: localStorage.getItem('iron_beast_pro_session'), archive: localStorage.getItem('iron_beast_archive'), max_vol: localStorage.getItem('ib_max_vol'), theme: localStorage.getItem('ib_theme') }; const b = new Blob([JSON.stringify(d)], {type: 'application/json'}), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = 'IronBeast_Backup.json'; a.click(); }
+        function importData(e) { hapticTap('light'); const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev) => { try { const d = JSON.parse(ev.target.result); if(d.archive) localStorage.setItem('iron_beast_archive', d.archive); if(d.session) localStorage.setItem('iron_beast_pro_session', d.session); if(d.max_vol) localStorage.setItem('ib_max_vol', d.max_vol); if(d.theme) localStorage.setItem('ib_theme', d.theme); window.location.reload(); } catch(x) { showDialog('خطأ', 'ملف غير صالح.', 'alert'); } }; r.readAsText(f); }
+        
+        function loadData() { const s = localStorage.getItem('iron_beast_pro_session'); if (s) { const d = JSON.parse(s); setsLog = d.sets || []; totalVolume = d.volume || 0; updateVolumeUI(); renderLog(); } const a = localStorage.getItem('iron_beast_archive'); if (a) workoutArchive = JSON.parse(a); }
+        function saveData() { localStorage.setItem('iron_beast_pro_session', JSON.stringify({ sets: setsLog, volume: totalVolume })); localStorage.setItem('iron_beast_archive', JSON.stringify(workoutArchive)); }
+        
+        const ironLaws = ["اترك غرورك خارج الجيم. 🔥", "المدى الحركي الكامل يبني عضلات حقيقية. 🦍", "الزيادة التدريجية هي مفتاح التطور. 📈", "التركيز الذهني يضاعف النتائج. 🧠"];
+        function setDailyQuote() { document.getElementById('motivationalQuote').innerText = ironLaws[Math.floor(Math.random() * ironLaws.length)]; }
+
+        setDailyQuote(); loadTheme(); loadData();
+    </script>
+</body>
+</html>
